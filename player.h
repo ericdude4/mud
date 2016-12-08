@@ -7,6 +7,7 @@ namespace Player {
 	public:
 		char ref;
 		int x, y, health, score;
+		std::string name;
 		Player(char symbol, std::string name);
 		~Player();//Destructor
 	};

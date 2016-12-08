@@ -1,5 +1,22 @@
 #include <vector>
+#include <unistd.h>
+#include <pthread.h>
 #include "maze.cpp"
+
+static const int NUMTHREADS = 4;
+const int TIMESTEP_DELAY = 10;
+pthread_mutex_t lock;
+
+void* run(void* my_player) {
+	Player::Player* player;
+	player = (Player::Player*) my_player;
+
+	// std::cout << player->name;
+	while(true) {
+		std::cout << player->name;
+		usleep(5000);
+	}
+}
 
 int main(int argc, char const *argv[])
 {
@@ -20,7 +37,22 @@ int main(int argc, char const *argv[])
 
 	Maze::Maze* m = new Maze::Maze(players);
 
-	farvin->ref = 'O';
-	m->printMaze();
+	//farvin->ref = 'O';
+	//m->printMaze();
+
+	pthread_t ct[NUMTHREADS];
+
+	for (int i=0;i<NUMTHREADS;i++) {
+		pthread_mutex_lock(&lock);
+		pthread_create(&ct[i], NULL, &run, (void *)players[i]);
+		pthread_mutex_unlock(&lock);
+	}
+	std::cout << "farvin x: " << farvin->x << " y: " << farvin->y << std::endl;
+
+	while(true) {
+		usleep(100);
+	}
+	//std::cout << "farvin x: " << farvin->x << " y: " << farvin->y << std::endl;
+
 	return 0;
 }

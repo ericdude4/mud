@@ -7,5 +7,6 @@ namespace Player {
 		this->ref = symbol;
 		this->health = 10;
 		this->score = 0;
+		this->name = name;
 	}
 }
