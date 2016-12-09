@@ -203,7 +203,7 @@ int main(int argc, char const *argv[])
 	signal(SIGUSR2, sigusr2);
 	signal(SIGTERM, astalavista_baby);
 
-	std::cout << "Enter TIMESTEP_DELAY seconds (float): ";
+	std::cout << "Press (r) to reset map\nPress (d) to display map\nEnter TIMESTEP_DELAY seconds (float): ";
 	std::cin >> TIMESTEP_DELAY;
 
 	Player::Player* farvin = new Player::Player('1', (std::string) "Farvin", 3);
