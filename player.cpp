@@ -15,7 +15,6 @@ namespace Player {
 	void Player::reset() {
 		this->health = this->ref == 'K' ? 7 : 10;
 		this->has_turn_to_attack = true;
-		this->score = 0;
 		this->name = name;
 		this->fighting = false;
 		int x, y;

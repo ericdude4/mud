@@ -5,17 +5,50 @@
 #include "maze.cpp"
 
 static const int NUMTHREADS = 4;
-const int TIMESTEP_DELAY = 1000;
+const float TIMESTEP_DELAY = 0.001;
 const int seconds = 1000000;
 volatile bool continuing = true;
+volatile bool paused = false;
+bool comments = false;
 pthread_mutex_t lock;
 Maze::Maze* m;
 Player::Player* gold = new Player::Player('G', (std::string) "Gold");
 Player::Player* kobold = new Player::Player('K', (std::string) "Kobold");
+int pid1, pid2, status;
+
+void sigusr1(int sig) {
+	std::cout <<"SIGUSR1" << std::endl;
+	m->printMaze();
+	for (int i = 0; i < 4; ++i)
+	{
+		std::cout << m->players[i]->name << "\tscore: " << m->players[i]->score << "\thealth: " << m->players[i]->health << std::endl;
+	}
+}
+
+void my_handler(int signum)
+{
+    if (signum == SIGUSR1)
+    {
+        std::cout << "Received SIGUSR1!\n";
+    }
+}
 
 void interrupted(int sig) {
-	std::cout<<"\nComputations complete."<<std::endl;
-	continuing=false;
+	/*std::cout << std::endl;
+	m->printMaze();
+	for (int i = 0; i < 4; ++i)
+	{
+		std::cout << m->players[i]->name << "\tscore: " << m->players[i]->score << "\thealth: " << m->players[i]->health << std::endl;
+	}*/
+	//continuing=false;
+	paused = true;
+	std::cout << "Reset map? (y/n) ";
+	char choice;
+	std::cin >> choice;
+	if (choice == 'y' || choice == 'Y') {
+		m->newMaze();
+	}
+	paused = false;
 }
 
 
@@ -57,13 +90,14 @@ void* run(void* my_player) {
 	char resource;
 
 	while (continuing) {
+		while(paused) usleep(TIMESTEP_DELAY * seconds);
 		// pthread_mutex_lock(&lock);
 		if (player->health <= 0) {	//player is dead (waiting for respawn)
 			player->health -= 1;
 			if (player->health <= -10){
 				player->reset();
 				newPosition(player);
-				std::cout << player->name << " has respawned!" << std::endl;
+				if (comments) std::cout << player->name << " has respawned!" << std::endl;
 			}
 		}
 		else if (player->fighting) {	//player is fighting
@@ -71,21 +105,21 @@ void* run(void* my_player) {
 			if (kobold->health > 0 && checkForResource(player->x, player->y) == 'K') { //make sure kobold isn't dead and hasnt respawned
 				if (player->has_turn_to_attack) {
 						int damage = rand() % 6 + 1;
-						std::cout << player->name << " attacks Kobold for " << damage << " damage! (" << kobold->health - damage << ")" << std::endl;
+						if (comments) std::cout << player->name << " attacks Kobold for " << damage << " damage! (" << kobold->health - damage << ")" << std::endl;
 						kobold->health -= damage;
 						if (kobold->health <= 0) {	//if two are fighting kobold, the one whos gets the last hit gets the points
 							player->score += 25;
-							std::cout << player->name << " has slain Kobold!" << std::endl;
+							if (comments) std::cout << player->name << " has slain Kobold!" << std::endl;
 							kobold->reset();
 							newPosition(kobold);
 							player->fighting = false;
 							player->has_turn_to_attack = true;
 						} else player->has_turn_to_attack = false;
 				} else {
-					std::cout << kobold->name << " attacks the " << player->name << " for 1 damage!" << std::endl;
-					player->health -= 10;
+					if (comments) std::cout << kobold->name << " attacks the " << player->name << " for 1 damage!" << std::endl;
+					player->health -= 5;
 					if (player->health <= 0) {
-						std::cout << player->name << " has been slain!" << std::endl;
+						if (comments) std::cout << player->name << " has been slain!" << std::endl;
 					} else {
 						player->has_turn_to_attack = true;
 					}
@@ -119,26 +153,73 @@ void* run(void* my_player) {
 			resource = checkForResource(player->x, player->y);
 			if (resource == 'G') {
 				player->score += 10;
-				std::cout << player->name << " has struck gold!" << std::endl;
+				if (comments) std::cout << player->name << " has struck gold!" << std::endl;
 				newPosition(gold);
 			}
 			else if (resource == 'K') {
 				player->fighting = true;
-				std::cout << player->name << " has entered battle!" << std::endl;
+				if (comments) std::cout << player->name << " has entered battle!" << std::endl;
 			}
 			pthread_mutex_unlock(&lock);
 		}
 		// pthread_mutex_unlock(&lock);
-		usleep(0.01 * seconds);
+		usleep(TIMESTEP_DELAY * seconds);
 	}
+}
+
+static void signal_handler(int signo)
+{
+
+    /* signo contains the signal number that was received */
+    switch( signo )
+    {
+        /* Signal is a SIGUSR1 */
+        case SIGUSR1:
+            std::cout << "Process : received SIGUSR1 \n" << getpid();
+            if(pid1==getpid()) /* it is the parent */
+	    {
+             std::cout << "Process  is passing SIGUSR1 to %d...\n" << getpid() << " " << pid2;
+             kill( pid2, SIGUSR1 );
+	    }
+	    else /* it is the child */
+	    {
+              std::cout << "Process  is passing SIGUSR2 to itself...\n" << getpid();
+              kill(getpid(), SIGUSR2);
+	    }
+            break;
+        
+        /*  It's a SIGUSR2 */
+        case SIGUSR2:
+            std::cout << "Process : received SIGUSR2 \n" << getpid();
+            if(pid1==getpid())
+	    {
+             std::cout << "Process %d is passing SIGUSR2 to ...\n" << getpid() << " " << pid2 ;
+             kill( pid2, SIGUSR2 );
+	    }
+	    else /* it is the child */
+	    {
+              std::cout << "Process %d will terminate itself using SIGINT\n" << getpid();
+              kill(getpid(), SIGINT);
+	    }
+            break;
+
+        default:
+                break;
+    }
+
+    return;
 }
 
 int main(int argc, char const *argv[])
 {
-	if (signal(SIGINT,interrupted)==SIG_ERR) {
-		std::cout<<"Halting."<<std::endl;
-		return 1;
-	}
+	//signal(SIGINT,interrupted);
+	//signal(SIGUSR1, my_handler);
+	if( signal( SIGUSR1, signal_handler) == SIG_ERR  )
+    {
+        std::cout <<"error\n";
+    }
+
+	//std::cout << SIGUSR2 << std::endl;
 
 	Player::Player* farvin = new Player::Player('1', (std::string) "Farvin");
 	Player::Player* garvin = new Player::Player('2', (std::string) "Garvin");
