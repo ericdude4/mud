@@ -38,27 +38,41 @@ namespace Maze {
 		int x = rand() % 18 + 1;
 		int y = rand() % 78 + 1;
 		int dir = 0;
-		for (int i = 0; i < 2000; i++) {
+		for (int i = 0; i < 400; i++) {
 			this->maze[x][y] = ' ';
-			if (rand() % 4 == 0) dir = rand() % 4;
+			if (rand() % 5 == 0) dir = rand() % 4;
 			switch (dir) {
-				case 0:	//NORTH
+				case 0:	//EAST
 					if (this->maze[x][y+1] != '#') y += 1;
 					break;
-				case 1:	//EAST
+				case 1:	//SOUTH
 					if (this->maze[x+1][y] != '#') x += 1;
 					break;
-				case 2:	//SOUTH
+				case 2:	//WEST
 					if (this->maze[x][y-1] != '#') y -= 1;
 					break;
-				case 3:	//WEST
+				case 3:	//NORTH
 					if (this->maze[x-1][y] != '#') x -= 1;
 					break;
 			}
-			if (i % 100 == 0) {	//every 100 itterations, randomize x and y again
-				x = rand() % 18 + 1;
-				y = rand() % 78 + 1;
+			if (rand() % 4 == 0) {	//25% chance of direction change
+				if (dir == 1 || dir == 3) {	//if its vertical
+					if (rand() % 2 == 0) {	//change is to a horiz
+						dir = 0;
+					} else dir = 2;
+				}
+				else if (dir == 2 || dir == 4) {	//if its horiz
+					if (rand() % 4 == 0) {//less likely to go horiz to vert
+						if (rand() % 2 == 0) {	//change is to a vertical
+							dir = 1;
+						} else dir = 3;
+					}
+				}
 			}
+			// if (i % 10 == 0) {	//every 100 itterations, randomize x and y again
+			// 	x = rand() % 18 + 1;
+			// 	y = rand() % 78 + 1;
+			// }
 		}
 	};
 

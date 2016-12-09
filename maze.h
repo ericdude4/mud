@@ -6,11 +6,11 @@ namespace Maze {
 	class Maze {
 	private:
 		char wall;
-		char maze[20][80];
-		std::vector<Player::Player*> players;
 		void makePath();
 		void dropPlayers();
 	public:
+		char maze[20][80];
+		std::vector<Player::Player*> players;
 		Maze(std::vector<Player::Player*> players);
 		~Maze();//Destructor
 
