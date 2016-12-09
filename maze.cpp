@@ -3,8 +3,14 @@
 #include <time.h>
 #include <string>
 #include <vector>
-
 #include "maze.h"
+
+/*
+Author: Eric Froese
+Student Number: 5029954
+Course: COSC 2P95
+Assignment: 3
+*/
 
 namespace Maze {
 
@@ -13,8 +19,12 @@ namespace Maze {
 		this->players = players;
 		this->wall = '#';
 		this->newMaze();
-		this->printMaze();
 	};
+
+	Maze::~Maze() {
+		for (int i = 0; i < this->players.size(); i++)
+			delete[] this->players[i];
+	}
 
 	void Maze::newMaze() {
 		//initialize the map with a border
@@ -69,10 +79,6 @@ namespace Maze {
 					}
 				}
 			}
-			// if (i % 10 == 0) {	//every 100 itterations, randomize x and y again
-			// 	x = rand() % 18 + 1;
-			// 	y = rand() % 78 + 1;
-			// }
 		}
 	};
 

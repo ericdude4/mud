@@ -2,6 +2,13 @@
 #include <vector>
 #include "player.cpp"
 
+/*
+Author: Eric Froese
+Student Number: 5029954
+Course: COSC 2P95
+Assignment: 3
+*/
+
 namespace Maze {
 	class Maze {
 	private:
